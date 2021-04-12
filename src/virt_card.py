@@ -1,3 +1,4 @@
+import sys
 import time
 import pexpect
 import subprocess as subp
@@ -26,24 +27,34 @@ class VirtCard:
     def enroll(self):
         log.debug("Smart card enrolled")
 
-    def run_cmd(self, cmd, expect, pin=True, passwd=None, shell=None):
+    def run_cmd(self, cmd: str, expect: str = None, pin: bool = True, passwd: str = None, shell=None):
         try:
             if shell is None:
                 shell = pexpect.spawn(cmd, encoding='utf-8')
-            shell.maxread = 1000
+            shell.logfile = sys.stdout
+
             if passwd is not None:
                 pattern = "PIN for " if pin else "Password"
                 time.sleep(1)
                 out = shell.expect([pexpect.TIMEOUT, pattern], timeout=10)
-                if out == 0:
-                    log.info("pshell() timed out on passsword / PIN waiting")
-                assert out == 1
+
+                if out != 1:
+                    if out == 0:
+                        log.error("Timed out on passsword / PIN waiting")
+                    expect = pattern
+
+                    raise pexpect.exceptions.EOF(f"Pattern '{pattern}' is not "
+                                                 f"found in the output.")
                 shell.sendline(passwd)
 
-            out = shell.expect([pexpect.TIMEOUT, expect], timeout=20)
-            if out == 0:
-                log.info("\npshell() timed out\n")
-            assert out == 1, "Wrong pattern is matched"
+            if expect is not None:
+                out = shell.expect([pexpect.TIMEOUT, expect], timeout=20)
+
+                if out != 1:
+                    if out == 0:
+                        log.error("Time out")
+                    raise pexpect.exceptions.EOF(f"Pattern '{expect}' is not "
+                                                 f"found in the output.")
 
         except pexpect.exceptions.EOF as e:
             log.error(
