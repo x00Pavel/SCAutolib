@@ -7,11 +7,18 @@ from SCAutolib import log
 
 class VirtCard:
     def __init__(self, insert=False):
-        self._inserted = insert
+        """
+        Constructor for virtual smart card.
+
+        :param insert: specify if virtual smart card should be automatically
+                       inserted in the context manager
+        """
+        self._insert = insert
+        self._inserted = False
         log.debug("Smart card initialized")
 
     def __enter__(self):
-        if self._inserted:
+        if self._insert:
             self.insert()
         return self
 

@@ -48,7 +48,7 @@ class Authselect:
 
     def __exit__(self, ext_type, ext_value, ext_traceback):
         if ext_type is not None:
-            log.error("Exception in authselect context")
+            log.error("Exception in virtual smart card context")
             log.error(f"Exception type: {ext_type}")
             log.error(f"Exception value: {ext_value}")
             log.error(f"Exception traceback: {ext_traceback}")
