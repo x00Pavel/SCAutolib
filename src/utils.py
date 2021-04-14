@@ -8,8 +8,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.x509.oid import NameOID
 from cryptography import x509
-from shutil import copy, SameFileError, copyfile
+from shutil import copy
 from SCAutolib import log
+import SCAutolib.src.virt_card as virt_sc
+import SCAutolib.src.authselect as authselect
 
 DIR_PATH = path.dirname(path.abspath(__file__))
 SERVICES = {"sssd": "/etc/sssd/sssd.conf", "krb": "/etc/krb5.conf"}
@@ -174,3 +176,11 @@ def generate_root_ca_crt(issuer="Example"):
         f.write(builder.public_bytes(serialization.Encoding.PEM))
 
     return cert, key_path
+
+
+def check_su_login_with_sc(pin=True, passwd="123456"):
+    """Function for common use case - su loging"""
+    with authselect.Authselect():
+        with virt_sc.VirtCard(insert=True) as sc:
+            sc.run_cmd('su - localuser1 -c "su - localuser1 -c whoami"',
+                       expect="localuser1", passwd=passwd, pin=pin)
